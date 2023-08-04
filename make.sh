@@ -13,7 +13,7 @@ RUN=true
 
 CONFIG=RELEASE
 ARCH=x64
-TARGET=install
+TARGET="--target install"
 CLEAN=false
 LIB_IMG_SHARED=false
 LIB_IMG_EXAMPLES=true
@@ -90,7 +90,7 @@ for ((i = 0; i < $#; i++)); do
     LIB_IMG_SHARED=true
     ;;
   --target)
-    TARGET=${opts[$((i + 1))]}
+    TARGET="--target ${opts[$((i + 1))]}"
     ((i++))
     ;;
   -v | --verbose)
@@ -144,7 +144,7 @@ if [[ $? -eq 1 ]]; then
     exit 1
 fi
 
-cmake --build $BUILD_DIR --target $TARGET $CMAKE_JOBS $CMAKE_VERBOSE
+cmake --build $BUILD_DIR $TARGET $CMAKE_JOBS $CMAKE_VERBOSE
 if [[ $? -eq 0 ]]; then
   printf "${G}Build successful.${W}\n\n"
   if [[ $RUN = true ]]; then
