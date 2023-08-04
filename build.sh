@@ -6,9 +6,9 @@ G="\033[0;92m"
 R="\033[0;91m"
 Y="\033[0;93m"
 
-BUILD_DIR=$(pwd)/build
+BUILD_DIR=$(pwd)/.build
 ROOT_DIR=$(pwd)
-INSTALL_PREFIX=$("pwd")/out
+INSTALL_PREFIX=$("pwd")/.out
 RUN=true
 
 CONFIG=RELEASE
