@@ -1,0 +1,6 @@
+#ifndef LIB_IMG_H
+#define LIB_IMG_H
+
+#include "image.hpp"
+
+#endif // LIB_IMG_H

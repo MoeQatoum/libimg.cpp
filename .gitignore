@@ -1,0 +1,17 @@
+*.so
+*.a
+*.exe
+*.dll
+*.i
+*.ii
+*.ptx
+*.cubin
+*.gpu
+*.fatbin
+
+/.cache
+/.perf
+/.venv
+/.vscode
+/build
+/out
