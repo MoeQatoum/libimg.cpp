@@ -35,11 +35,11 @@ endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL RELEASE)
     target_compile_options(${LIB_IMG}-example PRIVATE
-        $<$<COMPILE_LANGUAGE:CXX>: -O3 -Wall -Wextra -Wreorder-ctor>
+        $<$<COMPILE_LANGUAGE:CXX>: -O3 -Wall -Wextra -Wreorder-ctor -Wpadded>
     )
 elseif(CMAKE_BUILD_TYPE STREQUAL DEBUG)
     target_compile_options(${LIB_IMG}-example PRIVATE
-        $<$<COMPILE_LANGUAGE:CXX>: -O0 -g -Wall -Wextra -Wreorder-ctor -Wconversion>
+        $<$<COMPILE_LANGUAGE:CXX>: -O0 -g -Wall -Wextra -Wreorder-ctor -Wconversion -Wpadded>
     )
 endif()
 

@@ -20,6 +20,8 @@ if(UNIX)
     endif()
 endif()
 
+add_subdirectory(third_party)
+
 add_subdirectory(libimg)
 
 if(LIB_IMG_EXAMPLES)
