@@ -149,7 +149,7 @@ if [[ $? -eq 0 ]]; then
   printf "${G}Build successful.${W}\n\n"
   if [[ $RUN = true ]]; then
     printf "${G}-- Running Application.${W}\n\n"
-    ./out/img-example
+    $INSTALL_PREFIX/img-example
   fi
 else
   printf "${R}Build failed.${W}\n"

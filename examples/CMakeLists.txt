@@ -47,3 +47,10 @@ install(
     TARGETS ${LIB_IMG}-example
     DESTINATION ${LIB_IMG_EXAMPLE_INSTALL_DIR}
 )
+
+install(
+    DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/test_images/
+    DESTINATION ${LIB_IMG_EXAMPLE_INSTALL_DIR}/test_images
+    FILES_MATCHING
+    PATTERN "img-*.*"
+)
