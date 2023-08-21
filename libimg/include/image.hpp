@@ -13,6 +13,17 @@ namespace img {
 
     namespace fs = std::filesystem;
 
+    union PixelData {
+        u8* data_1B;
+
+        struct GREY8*  g8;
+        struct GREYa8* ga8;
+        struct RGB8*   rgb8;
+        struct RGBa8*  rgba8;
+        struct BGR8*   bgr8;
+        struct BGRa8*  bgra8;
+    };
+
     class LIB_IMG_PUBLIC Image {
     public:
         enum ImageFmt : u16 {
@@ -79,11 +90,15 @@ namespace img {
             return m_pixelCount;
         }
 
-        bool isNull() {
-            return !m_data_1B;
+        std::pair<u8*, PixelFmt> pixelData() {
+            return {m_d.data_1B, m_pixelFormat};
         }
 
-        void forEachPixel(std::function<void(u32 /* x */, u32 /* y */)> function);
+        bool isNull() {
+            return !m_d.data_1B;
+        }
+
+        void forEachPixel(std::function<void(u32 /* x */, u32 /* y */)> func);
 
         bool save(fs::path filePath, bool png_for_unsupported_format = true) const;
 
@@ -98,8 +113,9 @@ namespace img {
         Image& greyScaleAvg();
         Image& greyScaleLum();
 
-        Image& resize();
-        Image& crop();
+        Image& rescale(u32 width, u32 height);
+        Image& crop(u32 x1, u32 y1, u32 x2, u32 y2);
+
         Image& blur();
 
     private:
@@ -111,16 +127,18 @@ namespace img {
 
         u32 m_width, m_height, m_channelCount, m_pixelCount;
 
-        union { /* image pixels */
-            u8* m_data_1B;
+        // union { /* image pixels */
+        //     u8* m_data_1B;
 
-            struct GREY8*  m_g8;
-            struct GREYa8* m_ga8;
-            struct RGB8*   m_rgb8;
-            struct RGBa8*  m_rgba8;
-            struct BGR8*   m_bgr8;
-            struct BGRa8*  m_bgra8;
-        };
+        // struct GREY8*  m_g8;
+        // struct GREYa8* m_ga8;
+        // struct RGB8*   m_rgb8;
+        // struct RGBa8*  m_rgba8;
+        // struct BGR8*   m_bgr8;
+        // struct BGRa8*  m_bgra8;
+        // };
+
+        PixelData m_d;
     };
 
 } // namespace img

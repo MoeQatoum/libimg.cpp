@@ -1,8 +1,11 @@
 #include <algorithm>
 #include <chrono>
 #include <cstdint>
+#include <execution>
+#include <list>
 #include <memory>
 #include <random>
+#include <ranges>
 #include <unordered_map>
 
 #include "image.hpp"
@@ -93,7 +96,7 @@ namespace img {
           m_height(height),
           m_channelCount(channelCountFromPixelFormat(m_pixelFormat)),
           m_pixelCount(width * height),
-          m_data_1B(nullptr) {
+          m_d({nullptr}) {
         initPixels();
     }
 
@@ -103,10 +106,10 @@ namespace img {
           m_height(0),
           m_channelCount(0),
           m_pixelCount(0),
-          m_data_1B(nullptr) {
+          m_d({nullptr}) {
     }
 
-    Image::Image(const fs::path& filePath) : m_pixelFormat(PF_UNKOWN), m_data_1B(nullptr) {
+    Image::Image(const fs::path& filePath) : m_pixelFormat(PF_UNKOWN), m_d({nullptr}) {
         if (!fs::exists(filePath)) {
             IMG_ABORT("file does not exist: %s", filePath.c_str());
         }
@@ -128,7 +131,7 @@ namespace img {
             m_pixelCount = m_width * m_height;
 
             initPixels();
-            std::copy(d, d + (m_pixelCount * m_channelCount), m_data_1B);
+            std::copy(d, d + (m_pixelCount * m_channelCount), m_d.data_1B);
             stbi_image_free(d);
 
             // clang-format off
@@ -152,7 +155,7 @@ namespace img {
           m_height(other.m_height),
           m_channelCount(other.m_channelCount),
           m_pixelCount(m_width * m_height),
-          m_data_1B(nullptr) {
+          m_d({nullptr}) {
         initPixels();
         copyPixelsFromOtherImage(other);
     }
@@ -163,13 +166,13 @@ namespace img {
           m_height(std::move(other.m_height)),
           m_channelCount(std::move(other.m_channelCount)),
           m_pixelCount(std::move(other.m_pixelCount)),
-          m_data_1B(std::move(other.m_data_1B)) {
-        other.m_data_1B = nullptr;
+          m_d(std::move(other.m_d)) {
+        other.m_d = {nullptr};
     }
 
     Image::~Image() {
-        if (m_data_1B) {
-            delete[] m_data_1B;
+        if (m_d.data_1B) {
+            delete[] m_d.data_1B;
         }
     }
 
@@ -181,13 +184,13 @@ namespace img {
 
         // clang-format off
         switch (img.pixelFormat()) {
-            case PF_GREY8:  std::for_each(img.m_g8,    img.m_g8    + img.pixelCount(), [&rand_u8](GREY8&  p) { p = { .g = rand_u8() }; });                                 break;
-            case PF_GREYa8: std::for_each(img.m_ga8,   img.m_ga8   + img.pixelCount(), [&rand_u8](GREYa8& p) { p = { .g = rand_u8() }; });                                 break;
-            case PF_RGB8:   std::for_each(img.m_rgb8,  img.m_rgb8  + img.pixelCount(), [&rand_u8](RGB8&   p) { p = { .r = rand_u8(), .g = rand_u8(), .b = rand_u8() }; }); break;
-            case PF_RGBa8:  std::for_each(img.m_rgba8, img.m_rgba8 + img.pixelCount(), [&rand_u8](RGBa8&  p) { p = { .r = rand_u8(), .g = rand_u8(), .b = rand_u8() }; }); break;
-            case PF_BGR8:   std::for_each(img.m_bgr8,  img.m_bgr8  + img.pixelCount(), [&rand_u8](BGR8&   p) { p = { .b = rand_u8(), .g = rand_u8(), .r = rand_u8() }; }); break;
-            case PF_BGRa8:  std::for_each(img.m_bgra8, img.m_bgra8 + img.pixelCount(), [&rand_u8](BGRa8&  p) { p = { .b = rand_u8(), .g = rand_u8(), .r = rand_u8() }; }); break;
-            default:        IMG_ABORT("channel Type: %s is not implemented!", PixelFormatMap[img.pixelFormat()].c_str());                                                  break;
+            case PF_GREY8:  std::for_each(img.m_d.g8,    img.m_d.g8    + img.pixelCount(), [&rand_u8](GREY8&  p) { p = { .g = rand_u8() }; });                                 break;
+            case PF_GREYa8: std::for_each(img.m_d.ga8,   img.m_d.ga8   + img.pixelCount(), [&rand_u8](GREYa8& p) { p = { .g = rand_u8() }; });                                 break;
+            case PF_RGB8:   std::for_each(img.m_d.rgb8,  img.m_d.rgb8  + img.pixelCount(), [&rand_u8](RGB8&   p) { p = { .r = rand_u8(), .g = rand_u8(), .b = rand_u8() }; }); break;
+            case PF_RGBa8:  std::for_each(img.m_d.rgba8, img.m_d.rgba8 + img.pixelCount(), [&rand_u8](RGBa8&  p) { p = { .r = rand_u8(), .g = rand_u8(), .b = rand_u8() }; }); break;
+            case PF_BGR8:   std::for_each(img.m_d.bgr8,  img.m_d.bgr8  + img.pixelCount(), [&rand_u8](BGR8&   p) { p = { .b = rand_u8(), .g = rand_u8(), .r = rand_u8() }; }); break;
+            case PF_BGRa8:  std::for_each(img.m_d.bgra8, img.m_d.bgra8 + img.pixelCount(), [&rand_u8](BGRa8&  p) { p = { .b = rand_u8(), .g = rand_u8(), .r = rand_u8() }; }); break;
+            default:        IMG_ABORT("channel Type: %s is not implemented!", PixelFormatMap[img.pixelFormat()].c_str());                                                      break;
         }
         // clang-format on
 
@@ -219,9 +222,9 @@ namespace img {
         m_channelCount = other.m_channelCount;
         m_pixelCount   = other.m_pixelCount;
 
-        if (m_data_1B) {
-            delete[] m_data_1B;
-            m_data_1B = nullptr;
+        if (m_d.data_1B) {
+            delete[] m_d.data_1B;
+            m_d = {nullptr};
         }
 
         initPixels();
@@ -241,19 +244,19 @@ namespace img {
         m_channelCount = std::move(other.m_channelCount);
         m_pixelCount   = std::move(other.m_pixelCount);
 
-        if (m_data_1B) {
-            delete[] m_data_1B;
-            m_data_1B = nullptr;
+        if (m_d.data_1B) {
+            delete[] m_d.data_1B;
+            m_d = {nullptr};
         }
 
-        m_data_1B       = std::move(other.m_data_1B);
-        other.m_data_1B = nullptr;
+        m_d.data_1B = std::move(other.m_d.data_1B);
+        other.m_d   = {nullptr};
 
         return *this;
     }
 
     Image operator+(const Image& LHS, const Image& RHS) {
-        IMG_ASSERT(LHS.pixelFormat() == RHS.pixelFormat(), "can't do `op+` on with diff pixel format!");
+        IMG_ASSERT(LHS.pixelFormat() == RHS.pixelFormat(), "can't do `op+` on images with diff pixel format!");
 
         uint32_t w_max = LHS.width() > RHS.width() ? LHS.width() : RHS.width();
         uint32_t h_max = LHS.height() > RHS.height() ? LHS.height() : RHS.height();
@@ -263,10 +266,10 @@ namespace img {
         case Image::PF_RGB8:
             for (u32 y = 0; y < ret.height(); ++y) {
                 for (u32 x = 0; x < ret.width(); ++x) {
-                    u32 i         = (ret.width() * y) + x;
-                    u32 i_rhs     = (RHS.width() * (y % RHS.height())) + (x % RHS.width());
-                    u32 i_lhs     = (LHS.width() * (y % LHS.height())) + (x % LHS.width());
-                    ret.m_rgb8[i] = LHS.m_rgb8[i_lhs] + RHS.m_rgb8[i_rhs];
+                    u32 i           = (ret.width() * y) + x;
+                    u32 i_rhs       = (RHS.width() * (y % RHS.height())) + (x % RHS.width());
+                    u32 i_lhs       = (LHS.width() * (y % LHS.height())) + (x % LHS.width());
+                    ret.m_d.rgb8[i] = LHS.m_d.rgb8[i_lhs] + RHS.m_d.rgb8[i_rhs];
                 }
             }
             break;
@@ -288,10 +291,10 @@ namespace img {
         case Image::PF_RGB8: {
             for (u32 y = 0; y < ret.height(); ++y) {
                 for (u32 x = 0; x < ret.width(); ++x) {
-                    u32 i         = (ret.width() * y) + x;
-                    u32 i_rhs     = (RHS.width() * (y % RHS.height())) + (x % RHS.width());
-                    u32 i_lhs     = (LHS.width() * (y % LHS.height())) + (x % LHS.width());
-                    ret.m_rgb8[i] = LHS.m_rgb8[i_lhs] - RHS.m_rgb8[i_rhs];
+                    u32 i           = (ret.width() * y) + x;
+                    u32 i_rhs       = (RHS.width() * (y % RHS.height())) + (x % RHS.width());
+                    u32 i_lhs       = (LHS.width() * (y % LHS.height())) + (x % LHS.width());
+                    ret.m_d.rgb8[i] = LHS.m_d.rgb8[i_lhs] - RHS.m_d.rgb8[i_rhs];
                 }
             }
             break;
@@ -316,15 +319,19 @@ namespace img {
         // clang-format off
         switch (Image::getImageFormat(filePath)) {
             case IF_JPG:
-            case IF_JPEG: ret = stbi_write_jpg(filePath.c_str(), w, h, c, m_data_1B, 100);   break;
-            case IF_PNG:  ret = stbi_write_png(filePath.c_str(), w, h, c, m_data_1B, w * c); break;
-            case IF_BMP:  ret = stbi_write_bmp(filePath.c_str(), w, h, c, m_data_1B);        break;
-            case IF_TGA:  ret = stbi_write_tga(filePath.c_str(), w, h, c, m_data_1B);        break;
+            case IF_JPEG: ret = stbi_write_jpg(filePath.c_str(), w, h, c, m_d.data_1B, 100);   break;
+            case IF_PNG:  ret = stbi_write_png(filePath.c_str(), w, h, c, m_d.data_1B, w * c); break;
+            case IF_BMP:  ret = stbi_write_bmp(filePath.c_str(), w, h, c, m_d.data_1B);        break;
+            case IF_TGA:  ret = stbi_write_tga(filePath.c_str(), w, h, c, m_d.data_1B);        break;
             default:
                 if (png_for_unsupported_format /* allow implicit conversion on unsupported format ??*/) {
                     IMG_LOG_WARN("saving \"%s\" extension is not supported, defaulting to \".png\"", filePath.extension().c_str());
-                    filePath.replace_extension(".png"); ret = stbi_write_png(filePath.c_str(), w, h, c, m_data_1B, w * c);
-                } else { IMG_ABORT("unsupported format: %s", filePath.extension().c_str()); }
+                    filePath.replace_extension(".png");
+                    ret = stbi_write_png(filePath.c_str(), w, h, c, m_d.data_1B, w * c);
+                } else { 
+                    IMG_ABORT("unsupported format: %s", filePath.extension().c_str()); 
+                }
+                break;
             }
         // clang-format on
 
@@ -341,11 +348,11 @@ namespace img {
 
         // clang-format off
         switch (m_pixelFormat) {
-            case PF_RGB8:  std::for_each(m_rgb8,  m_rgb8  + m_pixelCount, [&r, &g, &b](RGB8&  p) { p *= arr3<float>{ r, g, b }; }); break;
-            case PF_RGBa8: std::for_each(m_rgba8, m_rgba8 + m_pixelCount, [&r, &g, &b](RGBa8& p) { p *= arr3<float>{ r, g, b }; }); break;
-            case PF_BGR8:  std::for_each(m_bgr8,  m_bgr8  + m_pixelCount, [&r, &g, &b](BGR8&  p) { p *= arr3<float>{ r, g, b }; }); break; 
-            case PF_BGRa8: std::for_each(m_bgra8, m_bgra8 + m_pixelCount, [&r, &g, &b](BGRa8& p) { p *= arr3<float>{ r, g, b }; }); break; 
-            default:       IMG_ABORT("channel Type: %s is not implemented!", PixelFormatMap[m_pixelFormat].c_str());                break;
+            case PF_RGB8:  std::for_each(m_d.rgb8,  m_d.rgb8  + m_pixelCount, [&r, &g, &b](RGB8&  p) { p *= arr3<float>{ r, g, b }; }); break;
+            case PF_RGBa8: std::for_each(m_d.rgba8, m_d.rgba8 + m_pixelCount, [&r, &g, &b](RGBa8& p) { p *= arr3<float>{ r, g, b }; }); break;
+            case PF_BGR8:  std::for_each(m_d.bgr8,  m_d.bgr8  + m_pixelCount, [&r, &g, &b](BGR8&  p) { p *= arr3<float>{ r, g, b }; }); break; 
+            case PF_BGRa8: std::for_each(m_d.bgra8, m_d.bgra8 + m_pixelCount, [&r, &g, &b](BGRa8& p) { p *= arr3<float>{ r, g, b }; }); break; 
+            default:       IMG_ABORT("channel Type: %s is not implemented!", PixelFormatMap[m_pixelFormat].c_str());                    break;
         }
         // clang-format on
 
@@ -357,10 +364,10 @@ namespace img {
 
         // clang-format off
         switch (m_pixelFormat) {
-        case PF_GREYa8: std::for_each(m_ga8,   m_ga8   + m_pixelCount, [&a](GREYa8& p) { p.a = clamp_8b(p.a + a); }); break;
-        case PF_RGBa8:  std::for_each(m_rgba8, m_rgba8 + m_pixelCount, [&a](RGBa8&  p) { p.a = clamp_8b(p.a + a); }); break;
-        case PF_BGRa8:  std::for_each(m_bgra8, m_bgra8 + m_pixelCount, [&a](BGRa8&  p) { p.a = clamp_8b(p.a + a); }); break;
-        default:                                                                                                      break;
+        case PF_GREYa8: std::for_each(m_d.ga8,   m_d.ga8   + m_pixelCount, [&a](GREYa8& p) { p.a = clamp_8b(p.a + a); }); break;
+        case PF_RGBa8:  std::for_each(m_d.rgba8, m_d.rgba8 + m_pixelCount, [&a](RGBa8&  p) { p.a = clamp_8b(p.a + a); }); break;
+        case PF_BGRa8:  std::for_each(m_d.bgra8, m_d.bgra8 + m_pixelCount, [&a](BGRa8&  p) { p.a = clamp_8b(p.a + a); }); break;
+        default:        IMG_ABORT("channel Type: %s is not implemented!", PixelFormatMap[m_pixelFormat].c_str());         break;
         }
         // clang-format on
 
@@ -372,13 +379,13 @@ namespace img {
 
         // clang-format off
         switch (m_pixelFormat) {
-            case PF_GREY8:  std::for_each(m_g8,    m_g8    + m_pixelCount, [&gen] (GREY8&  p) { p.g = clamp_8b(p.g + gen());              }); break;
-            case PF_GREYa8: std::for_each(m_ga8,   m_ga8   + m_pixelCount, [&gen] (GREYa8& p) { p.g = clamp_8b(p.g + gen());              }); break;
-            case PF_RGB8:   std::for_each(m_rgb8,  m_rgb8  + m_pixelCount, [&gen] (RGB8&   p) { p  += arr3<float>{ gen(), gen(), gen() }; }); break;
-            case PF_RGBa8:  std::for_each(m_rgba8, m_rgba8 + m_pixelCount, [&gen] (RGBa8&  p) { p  += arr3<float>{ gen(), gen(), gen() }; }); break;
-            case PF_BGR8:   std::for_each(m_bgr8,  m_bgr8  + m_pixelCount, [&gen] (BGR8&   p) { p  += arr3<float>{ gen(), gen(), gen() }; }); break;
-            case PF_BGRa8:  std::for_each(m_bgra8, m_bgra8 + m_pixelCount, [&gen] (BGRa8&  p) { p  += arr3<float>{ gen(), gen(), gen() }; }); break;
-            default:        IMG_ABORT("channel Type: %s is not implemented!", PixelFormatMap[m_pixelFormat].c_str());                         break;
+            case PF_GREY8:  std::for_each(m_d.g8,    m_d.g8    + m_pixelCount, [&gen] (GREY8&  p) { p.g = clamp_8b(p.g + gen());              }); break;
+            case PF_GREYa8: std::for_each(m_d.ga8,   m_d.ga8   + m_pixelCount, [&gen] (GREYa8& p) { p.g = clamp_8b(p.g + gen());              }); break;
+            case PF_RGB8:   std::for_each(m_d.rgb8,  m_d.rgb8  + m_pixelCount, [&gen] (RGB8&   p) { p  += arr3<float>{ gen(), gen(), gen() }; }); break;
+            case PF_RGBa8:  std::for_each(m_d.rgba8, m_d.rgba8 + m_pixelCount, [&gen] (RGBa8&  p) { p  += arr3<float>{ gen(), gen(), gen() }; }); break;
+            case PF_BGR8:   std::for_each(m_d.bgr8,  m_d.bgr8  + m_pixelCount, [&gen] (BGR8&   p) { p  += arr3<float>{ gen(), gen(), gen() }; }); break;
+            case PF_BGRa8:  std::for_each(m_d.bgra8, m_d.bgra8 + m_pixelCount, [&gen] (BGRa8&  p) { p  += arr3<float>{ gen(), gen(), gen() }; }); break;
+            default:        IMG_ABORT("channel Type: %s is not implemented!", PixelFormatMap[m_pixelFormat].c_str());                             break;
         }
         // clang-format on
 
@@ -392,57 +399,62 @@ namespace img {
         }
 
         union {
-            GREY8*  g8;
-            GREYa8* ga8;
-        };
+            u8* data_1B;
 
-        u8* old_data = m_data_1B;
+            RGB8*  rgb8;
+            RGBa8* rgba8;
+            BGR8*  bgr8;
+            BGRa8* bgra8;
+        } tmp;
+
+        tmp.data_1B = m_d.data_1B;
+        auto old_pf = m_pixelFormat;
 
         if (pixelFormat() & (PF_RGBa8 | PF_BGRa8)) {
-            ga8 = new GREYa8[pixelCount()];
-            switch (pixelFormat()) {
-            case PF_RGBa8:
-                for (size_t i = 0; i < pixelCount(); ++i) {
-                    ga8[i].g = clamp_8b((m_rgba8[i].r + m_rgba8[i].g + m_rgba8[i].b) / 3.);
-                    ga8[i].a = m_rgba8[i].a;
-                }
-                break;
-            case PF_BGRa8:
-                for (size_t i = 0; i < pixelCount(); ++i) {
-                    ga8[i].g = clamp_8b((m_bgra8[i].r + m_bgra8[i].g + m_bgra8[i].b) / 3.);
-                    ga8[i].a = m_bgra8[i].a;
-                }
-                break;
-            default:
-                IMG_ABORT("channel Type: %s is not implemented!", PixelFormatMap[m_pixelFormat].c_str());
-                break;
-            }
-            m_ga8          = ga8;
             m_pixelFormat  = PF_GREYa8;
             m_channelCount = 2;
         } else {
-            g8 = new GREY8[pixelCount()];
-            switch (pixelFormat()) {
-            case PF_RGB8:
-                for (size_t i = 0; i < pixelCount(); ++i) {
-                    g8[i].g = clamp_8b((m_rgb8[i].r + m_rgb8[i].g + m_rgb8[i].b) / 3.);
-                }
-                break;
-            case PF_BGR8:
-                for (size_t i = 0; i < pixelCount(); ++i) {
-                    g8[i].g = clamp_8b((m_bgr8[i].r + m_bgr8[i].g + m_bgr8[i].b) / 3.);
-                }
-                break;
-            default:
-                IMG_ABORT("channel Type: %s is not implemented!", PixelFormatMap[m_pixelFormat].c_str());
-                break;
-            }
-            m_g8           = g8;
             m_pixelFormat  = PF_GREY8;
             m_channelCount = 1;
         }
 
-        delete[] old_data;
+        m_d = {nullptr};
+        initPixels();
+
+        u32 i = 0;
+        switch (old_pf) {
+        case PF_RGB8:
+            std::for_each(m_d.g8, m_d.g8 + m_pixelCount, [&tmp, &i](GREY8& p) {
+                p.g = clamp_8b((tmp.rgb8[i].r + tmp.rgb8[i].g + tmp.rgb8[i].b) / 3.f);
+                ++i;
+            });
+            break;
+        case PF_RGBa8:
+            std::for_each(m_d.ga8, m_d.ga8 + m_pixelCount, [&tmp, &i](GREYa8& p) {
+                p.g = clamp_8b((tmp.rgba8[i].r + tmp.rgba8[i].g + tmp.rgba8[i].b) / 3.f);
+                p.a = tmp.rgba8[i].a;
+                ++i;
+            });
+            break;
+        case PF_BGR8:
+            std::for_each(m_d.g8, m_d.g8 + m_pixelCount, [&tmp, &i](GREY8& p) {
+                p.g = clamp_8b((tmp.bgr8[i].r + tmp.bgr8[i].g + tmp.bgr8[i].b) / 3.f);
+                ++i;
+            });
+            break;
+        case PF_BGRa8:
+            std::for_each(m_d.ga8, m_d.ga8 + m_pixelCount, [&tmp, &i](GREYa8& p) {
+                p.g = clamp_8b((tmp.bgra8[i].r + tmp.bgra8[i].g + tmp.bgra8[i].b) / 3.f);
+                p.a = tmp.bgra8[i].a;
+                ++i;
+            });
+            break;
+        default:
+            IMG_ABORT("channel Type: %s is not implemented!", PixelFormatMap[m_pixelFormat].c_str());
+            break;
+        }
+
+        delete[] tmp.data_1B;
 
         return *this;
     }
@@ -453,94 +465,211 @@ namespace img {
             return *this;
         }
 
-        union {
-            GREY8*  g8;
-            GREYa8* ga8;
-        };
+        float rf = .2126f, gf = .7152f, bf = .0722f;
 
-        u8* old_data = m_data_1B;
+        union {
+            u8* data_1B;
+
+            struct RGB8*  rgb8;
+            struct RGBa8* rgba8;
+            struct BGR8*  bgr8;
+            struct BGRa8* bgra8;
+        } tmp;
+
+        tmp.data_1B = m_d.data_1B;
+        auto old_pf = m_pixelFormat;
 
         if (pixelFormat() & (PF_RGBa8 | PF_BGRa8)) {
-            ga8 = new GREYa8[pixelCount()];
-            switch (pixelFormat()) {
-            case PF_RGBa8:
-                for (size_t i = 0; i < pixelCount(); ++i) {
-                    ga8[i].g = clamp_8b(0.2126 * m_rgba8[i].r + 0.7152 * m_rgba8[i].g + 0.0722 * m_rgba8[i].b);
-                    ga8[i].a = m_rgba8[i].a;
-                }
-                break;
-            case PF_BGRa8:
-                for (size_t i = 0; i < pixelCount(); ++i) {
-                    ga8[i].g = clamp_8b(0.2126 * m_bgra8[i].r + 0.7152 * m_bgra8[i].g + 0.0722 * m_bgra8[i].b);
-                    ga8[i].a = m_bgra8[i].a;
-                }
-                break;
-            default:
-                IMG_ABORT("channel Type: %s is not implemented!", PixelFormatMap[m_pixelFormat].c_str());
-                break;
-            }
-            m_ga8          = ga8;
             m_pixelFormat  = PF_GREYa8;
             m_channelCount = 2;
         } else {
-            g8 = new GREY8[pixelCount()];
-            switch (pixelFormat()) {
-            case PF_RGB8:
-                for (size_t i = 0; i < pixelCount(); ++i) {
-                    g8[i].g = clamp_8b(0.2126 * m_rgb8[i].r + 0.7152 * m_rgb8[i].g + 0.0722 * m_rgb8[i].b);
-                }
-                break;
-            case PF_BGR8:
-                for (size_t i = 0; i < pixelCount(); ++i) {
-                    g8[i].g = clamp_8b(0.2126 * m_bgr8[i].r + 0.7152 * m_bgr8[i].g + 0.0722 * m_bgr8[i].b);
-                }
-                break;
-            default:
-                IMG_ABORT("channel Type: %s is not implemented!", PixelFormatMap[m_pixelFormat].c_str());
-                break;
-            }
-            m_g8           = g8;
             m_pixelFormat  = PF_GREY8;
             m_channelCount = 1;
         }
 
-        delete[] old_data;
+        m_d = {nullptr};
+        initPixels();
+
+        u32 i = 0;
+        switch (old_pf) {
+        case PF_RGB8:
+            std::for_each(m_d.g8, m_d.g8 + m_pixelCount, [&tmp, &i, &rf, &gf, &bf](GREY8& p) {
+                p.g = clamp_8b(rf * tmp.rgb8[i].r + gf * tmp.rgb8[i].g + bf * tmp.rgb8[i].b);
+                ++i;
+            });
+            break;
+        case PF_RGBa8:
+            std::for_each(m_d.ga8, m_d.ga8 + m_pixelCount, [&tmp, &i, &rf, &gf, &bf](GREYa8& p) {
+                p.g = clamp_8b(rf * tmp.rgba8[i].r + gf * tmp.rgba8[i].g + bf * tmp.rgba8[i].b);
+                p.a = tmp.rgba8[i].a;
+                ++i;
+            });
+            break;
+        case PF_BGR8:
+            std::for_each(m_d.g8, m_d.g8 + m_pixelCount, [&tmp, &i, &rf, &gf, &bf](GREY8& p) {
+                p.g = clamp_8b(rf * tmp.bgr8[i].r + gf * tmp.bgr8[i].g + bf * tmp.bgr8[i].b);
+                ++i;
+            });
+            break;
+        case PF_BGRa8:
+            std::for_each(m_d.ga8, m_d.ga8 + m_pixelCount, [&tmp, &i, &rf, &gf, &bf](GREYa8& p) {
+                p.g = clamp_8b(rf * tmp.bgra8[i].r + gf * tmp.bgra8[i].g + bf * tmp.bgra8[i].b);
+                p.a = tmp.bgra8[i].a;
+                ++i;
+            });
+            break;
+        default:
+            IMG_ABORT("channel Type: %s is not implemented!", PixelFormatMap[m_pixelFormat].c_str());
+            break;
+        }
+
+        delete[] tmp.data_1B;
+
+        return *this;
+    }
+
+    Image& Image::crop(u32 x1, u32 y1, u32 x2, u32 y2) {
+        IMG_ASSERT((x2 > x1) && (y2 > y1) && (x1 * x2 * y1 * y2 != 0),
+                   "`(x2 > x1 > 0) && (y2 > y1 > 0)` x_min = left = 1, x_max = right = width, y_min = top = 1, y_max = "
+                   "bottom = height.");
+
+        union {
+            u8*     data_1B;
+            GREY8*  g8;
+            GREYa8* ga8;
+            RGB8*   rgb8;
+            RGBa8*  rgba8;
+            BGR8*   bgr8;
+            BGRa8*  bgra8;
+        } tmp;
+
+        tmp.data_1B = m_d.data_1B;
+        m_d         = {nullptr};
+
+        u32 old_w = m_width;
+        m_width   = x2 - x1;
+        m_height  = y2 - y1;
+
+        m_pixelCount = m_width * m_height;
+
+        initPixels();
+#if 0
+        u32 idx_new = 0;
+        switch (pixelFormat()) {
+        case PF_GREY8:
+            std::ranges::for_each(std::views::iota(y1, y2), [this, &tmp, &x1, &x2, &old_w, &idx_new](const u32& y) {
+                std::ranges::for_each(std::views::iota(x1, x2), [this, &y, &tmp, &idx_new, &old_w](const u32& x) {
+                    const u32 idx_old = (old_w * (y - 1)) + (x - 1);
+                    m_d.g8[idx_new]   = tmp.g8[idx_old];
+                    ++idx_new;
+                });
+            });
+            break;
+        case PF_GREYa8:
+            std::ranges::for_each(std::views::iota(y1, y2), [this, &tmp, &x1, &x2, &old_w, &idx_new](const u32& y) {
+                std::ranges::for_each(std::views::iota(x1, x2), [this, y, &tmp, &idx_new, old_w](const u32& x) {
+                    const u32 idx_old = (old_w * (y - 1)) + (x - 1);
+                    m_d.ga8[idx_new]  = tmp.ga8[idx_old];
+                    ++idx_new;
+                });
+            });
+            break;
+        case PF_RGB8:
+            std::ranges::for_each(std::views::iota(y1, y2), [this, &tmp, &x1, &x2, &old_w, &idx_new](const u32& y) {
+                std::ranges::for_each(std::views::iota(x1, x2), [this, &y, &tmp, &idx_new, &old_w](const u32& x) {
+                    const u32 idx_old = (old_w * (y - 1)) + (x - 1);
+                    m_d.rgb8[idx_new] = tmp.rgb8[idx_old];
+                    ++idx_new;
+                });
+            });
+            break;
+        case PF_RGBa8:
+            std::ranges::for_each(std::views::iota(y1, y2), [this, &tmp, &x1, &x2, &old_w, &idx_new](const u32& y) {
+                std::ranges::for_each(std::views::iota(x1, x2), [this, &y, &tmp, &idx_new, &old_w](const u32& x) {
+                    const u32 idx_old  = (old_w * (y - 1)) + (x - 1);
+                    m_d.rgba8[idx_new] = tmp.rgba8[idx_old];
+                    ++idx_new;
+                });
+            });
+            break;
+        case PF_BGR8:
+            std::ranges::for_each(std::views::iota(y1, y2), [this, &tmp, &x1, &x2, &old_w, &idx_new](const u32& y) {
+                std::ranges::for_each(std::views::iota(x1, x2), [this, y, &tmp, &idx_new, old_w](const u32& x) {
+                    const u32 idx_old = (old_w * (y - 1)) + (x - 1);
+                    m_d.bgr8[idx_new] = tmp.bgr8[idx_old];
+                    ++idx_new;
+                });
+            });
+            break;
+        case PF_BGRa8:
+            std::ranges::for_each(std::views::iota(y1, y2), [this, &tmp, &x1, &x2, &old_w, &idx_new](const u32& y) {
+                std::ranges::for_each(std::views::iota(x1, x2), [this, y, &tmp, &idx_new, old_w](const u32& x) {
+                    const u32 idx_old  = (old_w * (y - 1)) + (x - 1);
+                    m_d.bgra8[idx_new] = tmp.bgra8[idx_old];
+                    ++idx_new;
+                });
+            });
+            break;
+        default:
+            IMG_ABORT("channel Type: %s is not implemented!", PixelFormatMap[m_pixelFormat].c_str());
+            break;
+        }
+#else
+        for (u32 y = y1, ii = 0; y < y2; ++y) {
+            for (u32 x = x1; x < x2; ++x, ++ii) {
+                u32 idx_old = (old_w * (y - 1)) + (x - 1);
+                // clang-format off
+                switch (pixelFormat()) {
+                    case PF_GREY8:  m_d.g8[ii]    = tmp.g8[idx_old];     break;
+                    case PF_GREYa8: m_d.ga8[ii]   = tmp.ga8[idx_old];    break;
+                    case PF_RGB8:   m_d.rgb8[ii]  = tmp.rgb8[idx_old];   break;
+                    case PF_RGBa8:  m_d.rgba8[ii] = tmp.rgba8[idx_old];  break;
+                    case PF_BGR8:   m_d.bgr8[ii]  = tmp.bgr8[idx_old];   break;
+                    case PF_BGRa8:  m_d.bgra8[ii] = tmp.bgra8[idx_old];  break;
+                    default: IMG_ABORT("channel Type: %s is not implemented!", PixelFormatMap[m_pixelFormat].c_str()); break;
+                }
+                // clang-format on
+            }
+        }
+#endif
+
+        delete[] tmp.data_1B;
 
         return *this;
     }
 
     void Image::initPixels() {
-        if (m_data_1B) {
+        if (m_d.data_1B) {
             IMG_ABORT("image pixel data is already initialized");
         }
 
         // clang-format off
         switch (m_pixelFormat) {
-            case PF_UNKOWN: m_data_1B = new u8[m_pixelCount * m_channelCount]; break;
-            case PF_GREY8:  m_g8      = new GREY8[m_pixelCount];               break;
-            case PF_GREYa8: m_ga8     = new GREYa8[m_pixelCount];              break;
-            case PF_RGB8:   m_rgb8    = new RGB8[m_pixelCount];                break;
-            case PF_RGBa8:  m_rgba8   = new RGBa8[m_pixelCount];               break;
-            case PF_BGR8:   m_bgr8    = new BGR8[m_pixelCount];                break;
-            case PF_BGRa8:  m_bgra8   = new BGRa8[m_pixelCount];               break;
+            case PF_UNKOWN: m_d.data_1B = new u8[m_pixelCount * m_channelCount]; break;
+            case PF_GREY8:  m_d.g8      = new GREY8[m_pixelCount];               break;
+            case PF_GREYa8: m_d.ga8     = new GREYa8[m_pixelCount];              break;
+            case PF_RGB8:   m_d.rgb8    = new RGB8[m_pixelCount];                break;
+            case PF_RGBa8:  m_d.rgba8   = new RGBa8[m_pixelCount];               break;
+            case PF_BGR8:   m_d.bgr8    = new BGR8[m_pixelCount];                break;
+            case PF_BGRa8:  m_d.bgra8   = new BGRa8[m_pixelCount];               break;
             default: IMG_ABORT("channel Type: %s is not implemented!", PixelFormatMap[m_pixelFormat].c_str()); break;
         }
         // clang-format on
     }
 
     void Image::copyPixelsFromOtherImage(const Image& other) {
-        if (!m_data_1B) {
+        if (!m_d.data_1B) {
             IMG_ABORT("trying to copy pixels into nullptr");
         }
 
         // clang-format off
         switch (other.pixelFormat()) {//src begin     src end                             dist
-            case PF_GREY8:  std::copy(other.m_g8,    other.m_g8    + other.pixelCount(), m_g8);     break;
-            case PF_GREYa8: std::copy(other.m_ga8,   other.m_ga8   + other.pixelCount(), m_ga8);    break;
-            case PF_RGB8:   std::copy(other.m_rgb8,  other.m_rgb8  + other.pixelCount(), m_rgb8);   break;
-            case PF_RGBa8:  std::copy(other.m_rgba8, other.m_rgba8 + other.pixelCount(), m_rgba8);  break;
-            case PF_BGR8:   std::copy(other.m_bgr8,  other.m_bgr8  + other.pixelCount(), m_bgr8);   break;
-            case PF_BGRa8:  std::copy(other.m_bgra8, other.m_bgra8 + other.pixelCount(), m_bgra8);  break;
+            case PF_GREY8:  std::copy(other.m_d.g8,    other.m_d.g8    + other.pixelCount(), m_d.g8);          break;
+            case PF_GREYa8: std::copy(other.m_d.ga8,   other.m_d.ga8   + other.pixelCount(), m_d.ga8);         break;
+            case PF_RGB8:   std::copy(other.m_d.rgb8,  other.m_d.rgb8  + other.pixelCount(), m_d.rgb8);        break;
+            case PF_RGBa8:  std::copy(other.m_d.rgba8, other.m_d.rgba8 + other.pixelCount(), m_d.rgba8);       break;
+            case PF_BGR8:   std::copy(other.m_d.bgr8,  other.m_d.bgr8  + other.pixelCount(), m_d.bgr8);        break;
+            case PF_BGRa8:  std::copy(other.m_d.bgra8, other.m_d.bgra8 + other.pixelCount(), m_d.bgra8);       break;
             default: IMG_ABORT("channel Type: %s is not implemented!", PixelFormatMap[m_pixelFormat].c_str()); break;
         }
         // clang-format on
