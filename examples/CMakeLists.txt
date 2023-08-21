@@ -26,22 +26,17 @@ if(LIB_IMG_SHARED)
         )
     if (MSVC)
         install(
-            FILES $<TARGET_PDB_FILE:libimg> 
+            FILES $<TARGET_PDB_FILE:${LIB_IMG}> 
             DESTINATION ${LIB_IMG_EXAMPLE_INSTALL_DIR}
             OPTIONAL
         )
     endif()
 endif()
 
-if(CMAKE_BUILD_TYPE STREQUAL RELEASE)
-    target_compile_options(${LIB_IMG}-example PRIVATE
-        $<$<COMPILE_LANGUAGE:CXX>: -O3 -Wall -Wextra -Wreorder-ctor -Wpadded>
-    )
-elseif(CMAKE_BUILD_TYPE STREQUAL DEBUG)
-    target_compile_options(${LIB_IMG}-example PRIVATE
-        $<$<COMPILE_LANGUAGE:CXX>: -O0 -g -Wall -Wextra -Wreorder-ctor -Wconversion -Wpadded>
-    )
-endif()
+target_compile_options(${LIB_IMG}-example
+    PRIVATE $<$<COMPILE_LANGUAGE:CXX>:$<$<CONFIG:RELEASE>: ${LIB_IMG_RELEASE_BUILD_OPTIONS}>>
+    PRIVATE $<$<COMPILE_LANGUAGE:CXX>:$<$<CONFIG:DEBUG>:   ${LIB_IMG_DEBUG_BUILD_OPTIONS}>>
+)
 
 install(
     TARGETS ${LIB_IMG}-example
@@ -54,3 +49,11 @@ install(
     FILES_MATCHING
     PATTERN "img-*.*"
 )
+
+install(
+    DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/noise/
+    DESTINATION ${LIB_IMG_EXAMPLE_INSTALL_DIR}/noise
+    FILES_MATCHING
+    PATTERN "img-*.*"
+)
+

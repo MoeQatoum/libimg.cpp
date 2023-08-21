@@ -1,7 +1,13 @@
 #ifndef LIB_IMG_COMMON_H
 #define LIB_IMG_COMMON_H
 
-#define LIB_IMG_MAX_PIXELS_W_H 65535
+#include <limits.h>
+
+#ifndef LIB_IMG_MAX_SIZE
+    #define LIB_IMG_MAX_SIZE UINT_MAX
+#else
+static_assert(LIB_IMG_MAX_SIZE <= UINT_MAX, "`LIB_IMG_MAX_SIZE` can't be grater than `UINT_MAX`");
+#endif
 
 #if defined(_WIN32) | defined(_WIN64) | defined(__WIN32__) | defined(__WINDOWS__)
     #ifdef LIB_IMG_EXPORT

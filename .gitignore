@@ -14,4 +14,8 @@
 /.venv
 /.vscode
 /.build
+/.bench
 /.out
+run.sh
+
+img-*.*
