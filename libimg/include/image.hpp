@@ -104,7 +104,6 @@ namespace img {
         bool save(fs::path filePath, bool png_for_unsupported_format = true) const;
 
         Image& colorMask(float r, float g, float b);
-        Image& alphaMask(float a);
 
         Image& flipX();
         Image& flipY();

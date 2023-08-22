@@ -374,21 +374,6 @@ namespace img {
         return *this;
     }
 
-    Image& Image::alphaMask(float a) {
-        IMG_ASSERT(m_pixelFormat & (PF_GREYa8 | PF_RGBa8 | PF_BGRa8), "alpha mask requires image with 3 channels.");
-
-        // clang-format off
-        switch (m_pixelFormat) {
-        case PF_GREYa8: std::for_each(m_d.ga8,   m_d.ga8   + m_pixelCount, [&a](GREYa8& p) { p.a = clamp_8b(p.a + a); }); break;
-        case PF_RGBa8:  std::for_each(m_d.rgba8, m_d.rgba8 + m_pixelCount, [&a](RGBa8&  p) { p.a = clamp_8b(p.a + a); }); break;
-        case PF_BGRa8:  std::for_each(m_d.bgra8, m_d.bgra8 + m_pixelCount, [&a](BGRa8&  p) { p.a = clamp_8b(p.a + a); }); break;
-        default:        IMG_ABORT("channel Type: %s is not implemented!", PixelFormatMap[m_pixelFormat].c_str());         break;
-        }
-        // clang-format on
-
-        return *this;
-    }
-
     Image& Image::flipX() {
         for (u32 y = 0; y < m_height; ++y) {
             for (u32 x = 0; x < (m_width / 2); ++x) {
