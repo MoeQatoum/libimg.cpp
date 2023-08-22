@@ -416,6 +416,68 @@ namespace img {
         return *this;
     }
 
+    Image& Image::RotateRight() {
+        PixelData tmp{nullptr};
+        tmp.data_1B = m_d.data_1B;
+        m_d.data_1B = nullptr;
+        initPixels();
+
+        for (u32 x = 0, idx = 0; x < m_width; ++x) {
+            for (u32 y = 0; y < m_height; ++y, ++idx) {
+                u32 old_idx = (m_width * y) + x;
+                // clang-format off
+                switch (pixelFormat()) {
+                    case PF_GREY8:  m_d.g8[idx]    = tmp.g8[old_idx];    break;
+                    case PF_GREYa8: m_d.ga8[idx]   = tmp.ga8[old_idx];   break;
+                    case PF_RGB8:   m_d.rgb8[idx]  = tmp.rgb8[old_idx];  break;
+                    case PF_RGBa8:  m_d.rgba8[idx] = tmp.rgba8[old_idx]; break;
+                    case PF_BGR8:   m_d.bgr8[idx]  = tmp.bgr8[old_idx];  break;
+                    case PF_BGRa8:  m_d.bgra8[idx] = tmp.bgra8[old_idx]; break;
+                    default: IMG_ABORT("channel Type: %s is not implemented!", PixelFormatMap[m_pixelFormat].c_str()); break;
+                }
+                // clang-format on
+            }
+        }
+
+        std::swap(m_width, m_height);
+        delete[] tmp.data_1B;
+
+        flipX();
+
+        return *this;
+    }
+
+    Image& Image::RotateLeft() {
+        PixelData tmp{nullptr};
+        tmp.data_1B = m_d.data_1B;
+        m_d.data_1B = nullptr;
+        initPixels();
+
+        for (u32 x = 0, idx = 0; x < m_width; ++x) {
+            for (u32 y = 0; y < m_height; ++y, ++idx) {
+                u32 old_idx = (m_width * (m_height - y - 1) + (m_width - 1 - x));
+                // clang-format off
+                switch (pixelFormat()) {
+                    case PF_GREY8:  m_d.g8[idx]    = tmp.g8[old_idx];    break;
+                    case PF_GREYa8: m_d.ga8[idx]   = tmp.ga8[old_idx];   break;
+                    case PF_RGB8:   m_d.rgb8[idx]  = tmp.rgb8[old_idx];  break;
+                    case PF_RGBa8:  m_d.rgba8[idx] = tmp.rgba8[old_idx]; break;
+                    case PF_BGR8:   m_d.bgr8[idx]  = tmp.bgr8[old_idx];  break;
+                    case PF_BGRa8:  m_d.bgra8[idx] = tmp.bgra8[old_idx]; break;
+                    default: IMG_ABORT("channel Type: %s is not implemented!", PixelFormatMap[m_pixelFormat].c_str()); break;
+                }
+                // clang-format on
+            }
+        }
+
+        std::swap(m_width, m_height);
+        delete[] tmp.data_1B;
+
+        flipX();
+
+        return *this;
+    }
+
     Image& Image::addGaussianNoise(float mean, float dev) {
         auto gen = std::bind(std::normal_distribution<float>{mean, dev}, std::mt19937(std::random_device{}()));
 

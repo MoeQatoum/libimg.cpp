@@ -107,6 +107,8 @@ namespace img {
 
         Image& flipX();
         Image& flipY();
+        Image& RotateRight();
+        Image& RotateLeft();
 
         Image& addGaussianNoise(float mean, float dev);
 
