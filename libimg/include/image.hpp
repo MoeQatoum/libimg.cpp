@@ -66,6 +66,7 @@ namespace img {
 
         Image& operator=(const Image& other);
         Image& operator=(Image&& other);
+        Image& operator~();
 
         friend Image operator+(const Image& LHS, const Image& RHS);
         friend Image operator-(const Image& LHS, const Image& RHS);

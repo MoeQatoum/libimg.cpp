@@ -255,6 +255,21 @@ namespace img {
         return *this;
     }
 
+    Image& Image::operator~() {
+        // clang-format off
+        switch (m_pixelFormat) {
+            case PF_GREY8:  std::for_each(m_d.g8,    m_d.g8    + m_pixelCount, [](GREY8&  p)  { p.g=clamp_8b(255-p.g); });                                               break;
+            case PF_GREYa8: std::for_each(m_d.ga8,   m_d.ga8   + m_pixelCount, [](GREYa8& p)  { p.g=clamp_8b(255-p.g); });                                               break;
+            case PF_RGB8:   std::for_each(m_d.rgb8,  m_d.rgb8  + m_pixelCount, [](RGB8&   p)  { p.r=clamp_8b(255-p.r); p.g=clamp_8b(255-p.g); p.b=clamp_8b(255-p.b); }); break;
+            case PF_RGBa8:  std::for_each(m_d.rgba8, m_d.rgba8 + m_pixelCount, [](RGBa8&  p)  { p.r=clamp_8b(255-p.r); p.g=clamp_8b(255-p.g); p.b=clamp_8b(255-p.b); }); break;
+            case PF_BGR8:   std::for_each(m_d.bgr8,  m_d.bgr8  + m_pixelCount, [](BGR8&   p)  { p.r=clamp_8b(255-p.r); p.g=clamp_8b(255-p.g); p.b=clamp_8b(255-p.b); }); break; 
+            case PF_BGRa8:  std::for_each(m_d.bgra8, m_d.bgra8 + m_pixelCount, [](BGRa8&  p)  { p.r=clamp_8b(255-p.r); p.g=clamp_8b(255-p.g); p.b=clamp_8b(255-p.b); }); break; 
+            default:        IMG_ABORT("channel Type: %s is not implemented!", PixelFormatMap[m_pixelFormat].c_str());                                                    break;
+        }
+        // clang-format on
+        return *this;
+    }
+
     Image operator+(const Image& LHS, const Image& RHS) {
         IMG_ASSERT(LHS.pixelFormat() == RHS.pixelFormat(), "can't do `op+` on images with diff pixel format!");
 
@@ -503,8 +518,7 @@ namespace img {
         }
 
         union {
-            u8* data_1B;
-
+            u8*    data_1B;
             RGB8*  rgb8;
             RGBa8* rgba8;
             BGR8*  bgr8;
@@ -572,12 +586,11 @@ namespace img {
         float rf = .2126f, gf = .7152f, bf = .0722f;
 
         union {
-            u8* data_1B;
-
-            struct RGB8*  rgb8;
-            struct RGBa8* rgba8;
-            struct BGR8*  bgr8;
-            struct BGRa8* bgra8;
+            u8*    data_1B;
+            RGB8*  rgb8;
+            RGBa8* rgba8;
+            BGR8*  bgr8;
+            BGRa8* bgra8;
         } tmp;
 
         tmp.data_1B = m_d.data_1B;
