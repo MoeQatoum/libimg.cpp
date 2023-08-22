@@ -103,10 +103,10 @@ namespace img {
         bool save(fs::path filePath, bool png_for_unsupported_format = true) const;
 
         Image& colorMask(float r, float g, float b);
-        Image& colorMaskAt(uint32_t x, uint32_t y, float r, float g, float b);
-
         Image& alphaMask(float a);
-        Image& alphaMaskAt(uint32_t x, uint32_t y, float a);
+
+        Image& flipX();
+        Image& flipY();
 
         Image& addGaussianNoise(float mean, float dev);
 
@@ -123,21 +123,8 @@ namespace img {
         void copyPixelsFromOtherImage(const Image& other);
 
     private:
-        PixelFmt m_pixelFormat;
-
-        u32 m_width, m_height, m_channelCount, m_pixelCount;
-
-        // union { /* image pixels */
-        //     u8* m_data_1B;
-
-        // struct GREY8*  m_g8;
-        // struct GREYa8* m_ga8;
-        // struct RGB8*   m_rgb8;
-        // struct RGBa8*  m_rgba8;
-        // struct BGR8*   m_bgr8;
-        // struct BGRa8*  m_bgra8;
-        // };
-
+        PixelFmt  m_pixelFormat;
+        u32       m_width, m_height, m_channelCount, m_pixelCount;
         PixelData m_d;
     };
 

@@ -374,6 +374,48 @@ namespace img {
         return *this;
     }
 
+    Image& Image::flipX() {
+        for (u32 y = 0; y < m_height; ++y) {
+            for (u32 x = 0; x < (m_width / 2); ++x) {
+                u32 idx    = (m_width * y) + x;
+                u32 op_idx = (m_width * y) + (m_width - 1 - x);
+                // clang-format off
+                switch (pixelFormat()) {
+                    case PF_GREY8:  std::swap(m_d.g8[idx],    m_d.g8[op_idx]);     break;
+                    case PF_GREYa8: std::swap(m_d.ga8[idx],   m_d.ga8[op_idx]);    break;
+                    case PF_RGB8:   std::swap(m_d.rgb8[idx],  m_d.rgb8[op_idx]);   break;
+                    case PF_RGBa8:  std::swap(m_d.rgba8[idx], m_d.rgba8[op_idx]);  break;
+                    case PF_BGR8:   std::swap(m_d.bgr8[idx],  m_d.bgr8[op_idx]);   break;
+                    case PF_BGRa8:  std::swap(m_d.bgra8[idx], m_d.bgra8[op_idx]);  break;
+                    default: IMG_ABORT("channel Type: %s is not implemented!", PixelFormatMap[m_pixelFormat].c_str()); break;
+                }
+                // clang-format on
+            }
+        }
+        return *this;
+    }
+
+    Image& Image::flipY() {
+        for (u32 y = 0; y < (m_height / 2); ++y) {
+            for (u32 x = 0; x < m_width; ++x) {
+                u32 idx    = (m_width * y) + x;
+                u32 op_idx = (m_width * (m_height - 1 - y)) + x;
+                // clang-format off
+                switch (pixelFormat()) {
+                    case PF_GREY8:  std::swap(m_d.g8[idx],    m_d.g8[op_idx]);    break;
+                    case PF_GREYa8: std::swap(m_d.ga8[idx],   m_d.ga8[op_idx]);   break;
+                    case PF_RGB8:   std::swap(m_d.rgb8[idx],  m_d.rgb8[op_idx]);  break;
+                    case PF_RGBa8:  std::swap(m_d.rgba8[idx], m_d.rgba8[op_idx]); break;
+                    case PF_BGR8:   std::swap(m_d.bgr8[idx],  m_d.bgr8[op_idx]);  break;
+                    case PF_BGRa8:  std::swap(m_d.bgra8[idx], m_d.bgra8[op_idx]); break;
+                    default: IMG_ABORT("channel Type: %s is not implemented!", PixelFormatMap[m_pixelFormat].c_str()); break;
+                }
+                // clang-format on
+            }
+        }
+        return *this;
+    }
+
     Image& Image::addGaussianNoise(float mean, float dev) {
         auto gen = std::bind(std::normal_distribution<float>{mean, dev}, std::mt19937(std::random_device{}()));
 
