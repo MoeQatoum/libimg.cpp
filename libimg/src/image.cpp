@@ -1,9 +1,5 @@
-#include <algorithm>
-#include <chrono>
 #include <cstdint>
 #include <execution>
-#include <list>
-#include <memory>
 #include <random>
 #include <ranges>
 #include <unordered_map>
@@ -374,6 +370,21 @@ namespace img {
         return *this;
     }
 
+    Image& Image::fill(arr4<u8> fillColor) {
+        // clang-format off
+        switch (m_pixelFormat) {
+            case PF_GREY8:  std::for_each(m_d.g8,    m_d.g8    + m_pixelCount, [&fillColor](GREY8&  p) { p={fillColor[0]                                       }; }); break;
+            case PF_GREYa8: std::for_each(m_d.ga8,   m_d.ga8   + m_pixelCount, [&fillColor](GREYa8& p) { p={fillColor[0],fillColor[1]                          }; }); break;
+            case PF_RGB8:   std::for_each(m_d.rgb8,  m_d.rgb8  + m_pixelCount, [&fillColor](RGB8&   p) { p={fillColor[0],fillColor[1],fillColor[2]             }; }); break;
+            case PF_RGBa8:  std::for_each(m_d.rgba8, m_d.rgba8 + m_pixelCount, [&fillColor](RGBa8&  p) { p={fillColor[0],fillColor[1],fillColor[2],fillColor[3]}; }); break;
+            case PF_BGR8:   std::for_each(m_d.bgr8,  m_d.bgr8  + m_pixelCount, [&fillColor](BGR8&   p) { p={fillColor[0],fillColor[1],fillColor[2]             }; }); break; 
+            case PF_BGRa8:  std::for_each(m_d.bgra8, m_d.bgra8 + m_pixelCount, [&fillColor](BGRa8&  p) { p={fillColor[0],fillColor[1],fillColor[2],fillColor[3]}; }); break; 
+            default:        IMG_ABORT("channel Type: %s is not implemented!", PixelFormatMap[m_pixelFormat].c_str());                                                 break;
+        }
+        // clang-format on 
+        return *this;
+    }
+
     Image& Image::flipX() {
         for (u32 y = 0; y < m_height; ++y) {
             for (u32 x = 0; x < (m_width / 2); ++x) {
@@ -630,6 +641,69 @@ namespace img {
         return *this;
     }
 
+    Image& Image::pad(u32 topPad, u32 bottomPad, u32 leftPad, u32 rightPad, arr4<u8> padColor) {
+        u32 oldWidth  = m_width;
+        u32 oldHeight = m_height;
+
+        PixelData tmp = {nullptr};
+        tmp.data_1B   = m_d.data_1B;
+
+        m_height += topPad + bottomPad;
+        m_width += rightPad + leftPad;
+        m_pixelCount = m_width * m_height;
+        m_d          = {nullptr};
+
+        initPixels();
+
+        fill(padColor);
+
+        for (u32 y = 0, idx = 0; y < oldHeight; ++y) {
+            for (u32 x = 0; x < oldWidth; ++x, ++idx) {
+                u32 paddedIdx = (m_width * (y + topPad)) + (x + rightPad);
+                // clang-format off
+                switch (pixelFormat()) {
+                    case PF_GREY8:  m_d.g8[paddedIdx]    = tmp.g8[idx];     break;
+                    case PF_GREYa8: m_d.ga8[paddedIdx]   = tmp.ga8[idx];    break;
+                    case PF_RGB8:   m_d.rgb8[paddedIdx]  = tmp.rgb8[idx];   break;
+                    case PF_RGBa8:  m_d.rgba8[paddedIdx] = tmp.rgba8[idx];  break;
+                    case PF_BGR8:   m_d.bgr8[paddedIdx]  = tmp.bgr8[idx];   break;
+                    case PF_BGRa8:  m_d.bgra8[paddedIdx] = tmp.bgra8[idx];  break;
+                    default: IMG_ABORT("channel Type: %s is not implemented!", PixelFormatMap[m_pixelFormat].c_str()); break;
+                }
+                // clang-format on
+            }
+        }
+
+        delete[] tmp.data_1B;
+
+        return *this;
+    }
+
+    Image& Image::padBorderEqual(u32 padSize, arr4<u8> padColor) {
+        pad(padSize, padSize, padSize, padSize, padColor);
+        return *this;
+    }
+
+    Image& Image::padTop(u32 padSize, arr4<u8> padColor) {
+        pad(padSize, 0, 0, 0, padColor);
+        return *this;
+    }
+
+    Image& Image::padBottom(u32 padSize, arr4<u8> padColor) {
+        pad(0, padSize, 0, 0, padColor);
+        return *this;
+    }
+
+    Image& Image::padLeft(u32 padSize, arr4<u8> padColor) {
+        pad(0, 0, padSize, 0, padColor);
+        return *this;
+    }
+
+    Image& Image::padRight(u32 padSize, arr4<u8> padColor) {
+        pad(0, 0, 0, padSize, padColor);
+        return *this;
+    }
+
     Image& Image::crop(u32 x1, u32 y1, u32 x2, u32 y2) {
         IMG_ASSERT((x2 > x1) && (y2 > y1) && (x1 * x2 * y1 * y2 != 0),
                    "`(x2 > x1 > 0) && (y2 > y1 > 0)` x_min = left = 1, x_max = right = width, y_min = top = 1, y_max = "
@@ -655,7 +729,7 @@ namespace img {
         m_pixelCount = m_width * m_height;
 
         initPixels();
-#if 0
+#if 1
         u32 idx_new = 0;
         switch (pixelFormat()) {
         case PF_GREY8:
