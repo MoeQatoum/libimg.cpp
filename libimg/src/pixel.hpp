@@ -55,6 +55,12 @@ namespace img {
         }
 
         template<typename T>
+        GREY8& operator/(const T& other) {
+            Divide<GREY8>::apply(*this, other);
+            return *this;
+        }
+
+        template<typename T>
         GREY8& operator+=(const T& other) {
             return (*this + other);
         }
@@ -67,6 +73,11 @@ namespace img {
         template<typename T>
         GREY8& operator*=(const T& other) {
             return (*this * other);
+        }
+
+        template<typename T>
+        GREY8& operator/=(const T& other) {
+            return (*this / other);
         }
     };
 
@@ -96,6 +107,12 @@ namespace img {
         }
 
         template<typename T>
+        GREYa8& operator/(const T& other) {
+            Divide<GREYa8>::apply(*this, other);
+            return *this;
+        }
+
+        template<typename T>
         GREYa8& operator+=(const T& other) {
             return (*this + other);
         }
@@ -108,6 +125,11 @@ namespace img {
         template<typename T>
         GREYa8& operator*=(const T& other) {
             return (*this * other);
+        }
+
+        template<typename T>
+        GREYa8& operator/=(const T& other) {
+            return (*this / other);
         }
     };
 
@@ -139,6 +161,12 @@ namespace img {
         }
 
         template<typename T>
+        RGB8& operator/(const T& other) {
+            Divide<RGB8>::apply(*this, other);
+            return *this;
+        }
+
+        template<typename T>
         RGB8& operator+=(const T& other) {
             return (*this + other);
         }
@@ -151,6 +179,11 @@ namespace img {
         template<typename T>
         RGB8& operator*=(const T& other) {
             return (*this * other);
+        }
+
+        template<typename T>
+        RGB8& operator/=(const T& other) {
+            return (*this / other);
         }
     };
 
@@ -182,6 +215,12 @@ namespace img {
         }
 
         template<typename T>
+        RGBa8& operator/(const T& other) {
+            Divide<RGBa8>::apply(*this, other);
+            return *this;
+        }
+
+        template<typename T>
         RGBa8& operator+=(const T& other) {
             return (*this + other);
         }
@@ -194,6 +233,11 @@ namespace img {
         template<typename T>
         RGBa8& operator*=(const T& other) {
             return (*this * other);
+        }
+
+        template<typename T>
+        RGBa8& operator/=(const T& other) {
+            return (*this / other);
         }
     };
 
@@ -225,6 +269,12 @@ namespace img {
         }
 
         template<typename T>
+        BGR8& operator/(const T& other) {
+            Divide<BGR8>::apply(*this, other);
+            return *this;
+        }
+
+        template<typename T>
         BGR8& operator+=(const T& other) {
             return (*this + other);
         }
@@ -237,6 +287,11 @@ namespace img {
         template<typename T>
         BGR8& operator*=(const T& other) {
             return (*this * other);
+        }
+
+        template<typename T>
+        BGR8& operator/=(const T& other) {
+            return (*this / other);
         }
     };
 
@@ -268,6 +323,12 @@ namespace img {
         }
 
         template<typename T>
+        BGRa8& operator/(const T& other) {
+            Divide<BGRa8>::apply(*this, other);
+            return *this;
+        }
+
+        template<typename T>
         BGRa8& operator+=(const T& other) {
             return (*this + other);
         }
@@ -280,6 +341,11 @@ namespace img {
         template<typename T>
         BGRa8& operator*=(const T& other) {
             return (*this * other);
+        }
+
+        template<typename T>
+        BGRa8& operator/=(const T& other) {
+            return (*this / other);
         }
     };
 
