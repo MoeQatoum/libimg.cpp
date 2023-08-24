@@ -36,6 +36,12 @@ namespace img {
             return chr::duration_cast<TimeUnit>(Clock::now() - m_start);
         }
 
+        void log_elapsed(const std::string& bench_name) const {
+            auto now = Clock::now();
+            std::cout << "[TIME] " << bench_name << ": " << chr::duration_cast<usec>(now - m_start) << ", "
+                      << chr::duration_cast<msec>(now - m_start) << "\n";
+        }
+
         template<typename TimeUnit>
         void log_elapsed(const std::string& bench_name) const {
             std::cout << "[TIME] " << bench_name << ": " << chr::duration_cast<TimeUnit>(Clock::now() - m_start)
