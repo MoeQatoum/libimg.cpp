@@ -172,7 +172,7 @@ namespace img {
         }
     }
 
-    Image Image::GaussianRandomNoise(uint32_t width, uint32_t height, PixelFmt pf, float mean, float dev) {
+    Image Image::gaussianRandomNoise(uint32_t width, uint32_t height, PixelFmt pf, float mean, float dev) {
         Image img(width, height, pf);
 
         auto gen     = std::bind(std::normal_distribution<float>{mean, dev}, std::mt19937(std::random_device{}()));
@@ -427,7 +427,7 @@ namespace img {
         return *this;
     }
 
-    Image& Image::RotateRight() {
+    Image& Image::rotateRight() {
         PixelData tmp{nullptr};
         tmp.data_1B = m_d.data_1B;
         m_d.data_1B = nullptr;
@@ -458,7 +458,7 @@ namespace img {
         return *this;
     }
 
-    Image& Image::RotateLeft() {
+    Image& Image::rotateLeft() {
         PixelData tmp{nullptr};
         tmp.data_1B = m_d.data_1B;
         m_d.data_1B = nullptr;
@@ -504,6 +504,39 @@ namespace img {
         }
         // clang-format on
 
+        return *this;
+    }
+
+    Image& Image::addSaltAndPepperNoise(float prob, float randBotLimit, float randTopLimit) {
+        greyScaleLum();
+        auto gen = std::bind(std::uniform_real_distribution(randBotLimit, randTopLimit),
+                             std::mt19937(std::random_device{}()));
+
+        switch (m_pixelFormat) {
+        case PF_GREY8:
+            std::for_each(m_d.g8, m_d.g8 + m_pixelCount, [&gen, &prob](GREY8& p) {
+                float rand = gen();
+                if (rand < (prob / 2)) {
+                    p.g = 255;
+                } else if (rand > (1 - (prob / 2))) {
+                    p.g = 0;
+                }
+            });
+            break;
+        case PF_GREYa8:
+            std::for_each(m_d.ga8, m_d.ga8 + m_pixelCount, [&gen, &prob](GREYa8& p) {
+                float rand = gen();
+                if (rand < (prob / 2)) {
+                    p.g = 255;
+                } else if (rand > (1 - (prob / 2))) {
+                    p.g = 0;
+                }
+            });
+            break;
+        default:
+            IMG_ABORT("channel Type: %s is not implemented!", PixelFormatMap[m_pixelFormat].c_str());
+            break;
+        }
         return *this;
     }
 
@@ -729,7 +762,7 @@ namespace img {
         m_pixelCount = m_width * m_height;
 
         initPixels();
-#if 1
+#if 0
         u32 idx_new = 0;
         switch (pixelFormat()) {
         case PF_GREY8:
