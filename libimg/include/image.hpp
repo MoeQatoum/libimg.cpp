@@ -57,7 +57,7 @@ namespace img {
         ~Image();
 
         static Image creatBlankImage(uint32_t width, uint32_t height, PixelFmt pf);
-        static Image GaussianRandomNoise(uint32_t width, uint32_t height, PixelFmt pf, float mean, float dev);
+        static Image gaussianRandomNoise(uint32_t width, uint32_t height, PixelFmt pf, float mean, float dev);
 
         static ImageFmt getImageFormat(const fs::path& filePath);
         static PixelFmt getPixelFormat(const fs::path& filePath);
@@ -105,20 +105,21 @@ namespace img {
 
         Image& flipX();
         Image& flipY();
-        Image& RotateRight();
-        Image& RotateLeft();
+        Image& rotateRight(); // 90 deg
+        Image& rotateLeft();  // 90 deg
 
         Image& addGaussianNoise(float mean, float dev);
+        Image& addSaltAndPepperNoise(float prob, float randBotLimit = 0.f, float randTopLimit = .1f);
 
         Image& greyScaleAvg();
         Image& greyScaleLum();
 
-        Image& pad(u32 topPad, u32 bottomPad, u32 leftPad, u32 rightPad, arr4<u8> fillColor = {0, 0, 0, 0});
-        Image& padBorderEqual(u32 padSize, arr4<u8> fillColor = {0, 0, 0, 0});
-        Image& padTop(u32 padSize, arr4<u8> fillColor = {0, 0, 0, 0});
-        Image& padBottom(u32 padSize, arr4<u8> fillColor = {0, 0, 0, 0});
-        Image& padLeft(u32 padSize, arr4<u8> fillColor = {0, 0, 0, 0});
-        Image& padRight(u32 padSize, arr4<u8> fillColor = {0, 0, 0, 0});
+        Image& pad(u32 topPad, u32 bottomPad, u32 leftPad, u32 rightPad, arr4<u8> padColor = {0, 0, 0, 0});
+        Image& padBorderEqual(u32 padSize, arr4<u8> padColor = {0, 0, 0, 0});
+        Image& padTop(u32 padSize, arr4<u8> padColor = {0, 0, 0, 0});
+        Image& padBottom(u32 padSize, arr4<u8> padColor = {0, 0, 0, 0});
+        Image& padLeft(u32 padSize, arr4<u8> padColor = {0, 0, 0, 0});
+        Image& padRight(u32 padSize, arr4<u8> padColor = {0, 0, 0, 0});
 
         Image& rescale(u32 width, u32 height);
         Image& crop(u32 x1, u32 y1, u32 x2, u32 y2);
