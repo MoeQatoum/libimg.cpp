@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.27)
 
-set(CMAKE_CXX_STANDARD 23)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
+set(LIB_IMG_EXAMPLE               ${LIB_IMG}-example    CACHE INTERNAL "main")
 set(LIB_IMG_EXAMPLE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX} CACHE INTERNAL "libimg example install directory")
 
 if(LIB_IMG_SHARED)
@@ -16,8 +14,19 @@ if(LIB_IMG_SHARED)
     endif()
 endif()
 
-add_executable(${LIB_IMG}-example main.cpp)
-target_link_libraries(${LIB_IMG}-example PRIVATE ${LIB_IMG})
+add_executable(${LIB_IMG_EXAMPLE}  main.cpp)
+
+target_include_directories(${LIB_IMG_EXAMPLE} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/include)
+
+target_link_libraries(${LIB_IMG_EXAMPLE} PRIVATE ${LIB_IMG})
+
+set_target_properties(
+    ${LIB_IMG_EXAMPLE} PROPERTIES
+    CXX_STANDARD          23
+    CXX_STANDARD_REQUIRED ON
+    CXX_EXTENSIONS        OFF
+)
+
 
 if(LIB_IMG_SHARED)
         install(
@@ -33,13 +42,13 @@ if(LIB_IMG_SHARED)
     endif()
 endif()
 
-target_compile_options(${LIB_IMG}-example
+target_compile_options(${LIB_IMG_EXAMPLE}
     PRIVATE $<$<COMPILE_LANGUAGE:CXX>:$<$<CONFIG:RELEASE>: ${LIB_IMG_RELEASE_BUILD_OPTIONS}>>
     PRIVATE $<$<COMPILE_LANGUAGE:CXX>:$<$<CONFIG:DEBUG>:   ${LIB_IMG_DEBUG_BUILD_OPTIONS}>>
 )
 
 install(
-    TARGETS ${LIB_IMG}-example
+    TARGETS ${LIB_IMG_EXAMPLE}
     DESTINATION ${LIB_IMG_EXAMPLE_INSTALL_DIR}
 )
 
@@ -56,4 +65,3 @@ install(
     FILES_MATCHING
     PATTERN "img-*.*"
 )
-

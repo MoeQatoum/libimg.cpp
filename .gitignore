@@ -12,6 +12,7 @@
 /.cache
 /.perf
 /.venv
+/.external
 /.vscode
 /.build
 /.bench

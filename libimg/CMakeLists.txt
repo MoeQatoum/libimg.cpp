@@ -1,12 +1,7 @@
-
 set(LIB_IMG_INCLUDE_DIR         ${CMAKE_CURRENT_LIST_DIR}/include       CACHE INTERNAL "libimg include directory")
 set(LIB_IMG_SRC_DIR             ${CMAKE_CURRENT_LIST_DIR}/src           CACHE INTERNAL "libimg source directory")
 set(LIB_IMG_LIB_INSTALL_DIR     ${CMAKE_INSTALL_PREFIX}/libimg/lib      CACHE INTERNAL "libimg lib install directory")
 set(LIB_IMG_INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/libimg/include  CACHE INTERNAL "libimg include install directory")
-
-# set(LIB_IMG_TCMALLOC_FLAGS       -ltcmalloc_minimal -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free)
-set(LIB_IMG_RELEASE_BUILD_OPTIONS -O3 -Wall -Wextra -Wreorder-ctor -Wpadded -Wpedantic -Wdouble-promotion)
-set(LIB_IMG_DEBUG_BUILD_OPTIONS   -O0 -ggdb -Wall -Wextra -Wreorder-ctor -Wconversion -Wpadded -Wpedantic -Wdouble-promotion -Wswitch-enum)
 
 file(GLOB_RECURSE LIB_IMG_SOURCES
     ${LIB_IMG_SRC_DIR}/*.cpp
@@ -37,10 +32,13 @@ target_compile_definitions(${LIB_IMG}
     PUBLIC  $<IF:$<BOOL:${LIB_IMG_SHARED}>,,LIB_IMG_STATIC>
 )
 
-#if windows
-# set_target_properties(${LIB_IMG} 
-#     PROPERTIES OUTPUT_NAME $<IF:$<BOOL:${LIB_IMG_SHARED}>,,${LIB_IMG}_static>
-# )
+set_target_properties(${LIB_IMG} PROPERTIES
+    #if windows
+    # OUTPUT_NAME $<IF:$<BOOL:${LIB_IMG_SHARED}>,,${LIB_IMG}_static>
+    CXX_STANDARD          23
+    CXX_STANDARD_REQUIRED ON
+    CXX_EXTENSIONS        OFF
+)
 
 
 if (LIB_IMG_INSTALL)
