@@ -12,10 +12,6 @@ project(
     LANGUAGES CXX
 )
 
-# set(LIB_IMG_TCMALLOC_FLAGS       -ltcmalloc_minimal -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free)
-set(LIB_IMG_RELEASE_BUILD_OPTIONS -O3 -DNDEBUG -Wall -Wextra -Wreorder-ctor -Wpadded -Wpedantic -Wdouble-promotion)
-set(LIB_IMG_DEBUG_BUILD_OPTIONS   -O0 -ggdb3 -Wall -Wextra -Wreorder-ctor -Wconversion -Wpadded -Wpedantic -Wdouble-promotion -Wswitch-enum)
-
 if(UNIX)
     if ("${CMAKE_BUILD_TYPE}" STREQUAL "")
         set(CMAKE_BUILD_TYPE RELEASE)
