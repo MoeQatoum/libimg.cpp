@@ -2,5 +2,6 @@
 #define LIB_IMG_H
 
 #include "image.hpp"
+#include "pixel.hpp"
 
 #endif // LIB_IMG_H

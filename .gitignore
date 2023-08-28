@@ -16,6 +16,7 @@
 /.vscode
 /.build
 /.bench
+/.extra
 /.out
 run.sh
 

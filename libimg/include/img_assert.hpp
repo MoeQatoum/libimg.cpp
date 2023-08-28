@@ -1,6 +1,9 @@
 #ifndef LIB_IMG_ASSERT_H
 #define LIB_IMG_ASSERT_H
 
+#include <string>
+#include <utility>
+
 #include "console_log.hpp"
 
 #ifndef LIB_IMG_DEBUG_LVL
@@ -26,5 +29,17 @@
 #else
     #define IMG_DEBUG_ASSERT(condition, msg, ...)
 #endif // LIB_IMG_DEBUG_LVL > 0
+
+#if 0
+    #define UNREACHABLE(...)                                                                                      \
+        do {                                                                                                      \
+            std::string s{__VA_ARGS__};                                                                           \
+            std::cerr << IMG_LOG_CLR_R << "UNREACHABLE:" << __LINE__ << ":" << __FILE__ << IMG_LOG_CLR_W << ": `" \
+                      << (s.empty() ? "<no message>" : s) << "`" << std::endl;                                    \
+            std::unreachable();                                                                                   \
+        } while (0)
+#else
+    #define UNREACHABLE()
+#endif
 
 #endif // LIB_IMG_ASSERT_H
