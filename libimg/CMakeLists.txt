@@ -10,10 +10,10 @@ set(STD_LIB_CPP_FLAGS        -stdlib=libc++)
 set(STD_LIB_CXX_LINKER_FLAGS -lc++ -nostdlib++)
 
 set(LIB_IMG_REL_BUILD_FLAGS -O3 -DNDEBUG)
-set(LIB_IMG_REL_WARN_FLAGS  -Wall -Wextra -Wreorder-ctor -Wpadded -Wpedantic -Wdouble-promotion)
+set(LIB_IMG_REL_WARN_FLAGS  -Wall -Wextra -Wreorder-ctor -Wpedantic -Wdouble-promotion)
 
 set(LIB_IMG_DBG_BUILD_FLAGS -O0 -ggdb3)
-set(LIB_IMG_DBG_WARN_FLAGS  -Wall -Wextra -Wreorder-ctor -Wconversion -Wpadded -Wpedantic -Wdouble-promotion -Wswitch-enum)
+set(LIB_IMG_DBG_WARN_FLAGS  -Wall -Wextra -Wreorder-ctor -Wconversion -Wpedantic -Wdouble-promotion -Wswitch-enum)
 
 
 add_library(${LIB_IMG} INTERFACE)
