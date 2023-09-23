@@ -19,10 +19,11 @@ LIB_IMG_SHARED=false
 LIB_IMG_EXAMPLES=true
 
 CUDA_CPP_HOST_COMPILER="clang++-16"
-CUDA_C_HOST_COMPILER="clang-16"
+CUDA_C_HOST_COMPILER="clang-15"
 CXX_COMPILER="clang++-16"
-C_COMPILER="clnag-16"
+C_COMPILER="clang-16"
 CUDA_ROOT_DIR="/usr/local/cuda"
+USE_TCMALLOC=false
 CMAKE_VERBOSE=""
 CMAKE_JOBS="-j"
 
@@ -89,6 +90,9 @@ for ((i = 0; i < $#; i++)); do
   --shared)
     LIB_IMG_SHARED=true
     ;;
+  --use-tcmalloc)
+    USE_TCMALLOC=true
+    ;;
   --target)
     TARGET="--target ${opts[$((i + 1))]}"
     ((i++))
@@ -133,10 +137,12 @@ fi
 
 cmake -S $ROOT_DIR -B $BUILD_DIR \
   -D CMAKE_CXX_COMPILER=$CXX_COMPILER \
+  -D CMAKE_C_COMPILER=$C_COMPILER \
   -D CMAKE_BUILD_TYPE:STRING=$CONFIG \
   -D CMAKE_CUDA_HOST_COMPILER=$CUDA_CPP_HOST_COMPILER \
   -D CMAKE_INSTALL_PREFIX=$INSTALL_PREFIX \
   -D CMAKE_EXPORT_COMPILE_COMMANDS:BOOL=true \
+  -D LIB_IMG_USE_TCMALLOC:BOOL=$USE_TCMALLOC \
   -D LIB_IMG_SHARED:BOOL=$LIB_IMG_SHARED \
   -D LIB_IMG_EXAMPLES:BOOL=$LIB_IMG_EXAMPLES
 if [[ $? -eq 1 ]]; then
