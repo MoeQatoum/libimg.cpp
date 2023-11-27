@@ -8,6 +8,7 @@
 *.cubin
 *.gpu
 *.fatbin
+.DS_Store
 
 /.cache
 /.perf
